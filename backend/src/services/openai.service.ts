@@ -3,7 +3,7 @@ import { env } from '../config/env.js';
 import { getSystemPrompt } from '../prompts/systemPrompt.js';
 
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-const MODEL_NAME = 'gemini-2.0-flash'; // Use stable model name for free tier
+const MODEL_NAME = 'gemini-2.0-flash';
 
 export const streamOpenAIResponse = async function* (
   messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
@@ -13,11 +13,10 @@ export const streamOpenAIResponse = async function* (
   
   // Build system instruction (Gemini uses systemInstruction instead of system messages)
   const systemInstruction = gmailContext
-    ? `${systemPrompt}\n\nGmail Context: ${gmailContext}`
+    ? `${systemPrompt}\n\nGmail Context: ${gmailContext}\n\nRemember: Always format your response with Heading, Description, and Probable Follow-up Question sections.`
     : systemPrompt;
 
   // Convert messages to Gemini format
-  // Gemini doesn't support system role in messages, so we use systemInstruction
   const conversationHistory = messages
     .filter(msg => msg.role !== 'system' && msg.content.trim())
     .map(msg => ({
@@ -57,7 +56,7 @@ export const streamOpenAIResponse = async function* (
       }
     }
   } else {
-    // For first message, use generateContentStream directly (more efficient)
+    
     const result = await model.generateContentStream(currentMessage.parts[0].text);
 
     for await (const chunk of result.stream) {

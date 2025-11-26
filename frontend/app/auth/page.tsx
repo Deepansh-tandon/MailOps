@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function AuthPage() {
   const searchParams = useSearchParams();
@@ -20,7 +21,7 @@ export default function AuthPage() {
 
     const exchangeToken = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/auth/exchange-token", {
+        const response = await fetch(`${API_BASE_URL}/api/auth/exchange-token`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -34,14 +35,13 @@ export default function AuthPage() {
 
         const data = await response.json();
         
-        // Store tokens in localStorage
+        // localStorage
         localStorage.setItem("gmail_tokens", JSON.stringify(data.tokens));
         
         setStatus("success");
-        
-        // Redirect to home after 1 second
+
         setTimeout(() => {
-          router.push("/");
+          router.push("/chat");
         }, 1000);
       } catch (err: any) {
         setError(err.message || "Failed to authenticate");

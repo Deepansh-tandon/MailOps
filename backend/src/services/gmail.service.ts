@@ -7,11 +7,11 @@ const getGmailClient = (tokens: any) => {
   return google.gmail({ version: 'v1', auth: oauth2Client });
 };
 
-export const readInbox = async (tokens: any, maxResults: number = 10, query?: string): Promise<any[]> => {
+export const readInbox = async (tokens: any, maxResults: number = 500, query?: string): Promise<any[]> => {
   const gmail = getGmailClient(tokens);
   const response = await gmail.users.messages.list({
     userId: 'me',
-    maxResults,
+    maxResults, // Fetch maximum allowed by Gmail API (500)
     q: query,
   });
 
@@ -19,9 +19,11 @@ export const readInbox = async (tokens: any, maxResults: number = 10, query?: st
     return [];
   }
 
-  const messageIds = response.data.messages.map((msg: any) => msg.id);
+  // Limit to 20 emails maximum
+  const limitedMessageIds = response.data.messages.slice(0, 20).map((msg: any) => msg.id);
+  
   const messages = await Promise.all(
-    messageIds.map((id: string) =>
+    limitedMessageIds.map((id: string) =>
       gmail.users.messages.get({
         userId: 'me',
         id,
@@ -34,14 +36,14 @@ export const readInbox = async (tokens: any, maxResults: number = 10, query?: st
 };
 
 export const summarizeEmails = async (tokens: any, query?: string): Promise<string> => {
-  const emails = await readInbox(tokens, 20);
+  const emails = await readInbox(tokens, 500, query);
   
   if (emails.length === 0) {
     return 'No emails found in your inbox.';
   }
 
+  // Already limited to 20 in readInbox, but show all up to 20
   const summary = emails
-    .slice(0, 10)
     .map(
       (email, idx) =>
         `${idx + 1}. From: ${email.from}\n   Subject: ${email.subject}\n   Preview: ${email.snippet}\n`

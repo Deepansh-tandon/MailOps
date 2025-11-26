@@ -10,11 +10,12 @@ interface Message {
   content: string;
 }
 
-export function ChatInput() {
+export function ChatInterface() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -95,7 +96,7 @@ export function ChatInput() {
                   throw new Error(parsed.error);
                 }
               } catch (e) {
-               console.log(e);
+                // Skip invalid JSON
               }
             }
           }
@@ -112,30 +113,54 @@ export function ChatInput() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4">
-      {messages.length > 0 && (
-        <div className="mb-6 space-y-4 max-h-96 overflow-y-auto">
-          {messages.map((msg, idx) => (
+    <div className="flex flex-col h-full">
+      {/* Messages Container */}
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto mb-6 space-y-4 pr-2 custom-scrollbar min-h-0"
+      >
+        {messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <p className="text-neutral-400 text-lg mb-2">Start a conversation</p>
+              <p className="text-neutral-500 text-sm">Ask me to read, summarize, or send emails</p>
+            </div>
+          </div>
+        ) : (
+          messages.map((msg, idx) => (
             <div
               key={idx}
               className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[80%] rounded-lg p-3 ${
+                className={`max-w-[75%] rounded-2xl p-4 ${
                   msg.role === "user"
                     ? "bg-white text-black"
-                    : "bg-neutral-800 text-white"
+                    : "bg-neutral-800 text-white border border-neutral-700"
                 }`}
               >
-                <p className="whitespace-pre-wrap">{msg.content}</p>
+                <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
               </div>
             </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-      )}
+          ))
+        )}
+        {isStreaming && messages.length > 0 && (
+          <div className="flex justify-start">
+            <div className="bg-neutral-800 text-white border border-neutral-700 rounded-2xl p-4">
+              <div className="flex space-x-1">
+                <span className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></span>
+                <span className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></span>
+                <span className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></span>
+              </div>
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input Form */}
       <form onSubmit={handleSubmit} className="relative">
-        <div className="relative rounded-2xl border p-2 md:rounded-3xl ">
+        <div className="relative rounded-2xl border p-2 md:rounded-3xl">
           <GlowingEffect
             spread={40}
             glow={true}

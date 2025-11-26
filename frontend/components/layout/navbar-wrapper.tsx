@@ -11,6 +11,7 @@ import {
   NavbarButton,
 } from "@/components/ui/resizable-navbar";
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "@/lib/api";
 
 export function NavbarWrapper() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -23,7 +24,7 @@ export function NavbarWrapper() {
 
   const handleGmailAuth = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/auth/google");
+      const response = await fetch(`${API_BASE_URL}/api/auth/google`);
       const data = await response.json();
       if (data.authUrl) {
         window.location.href = data.authUrl;

@@ -7,7 +7,7 @@ export const handleGmailAction = async (
 ): Promise<string> => {
   switch (intent.type) {
     case 'read':
-      const emails = await readInbox(tokens, 10);
+      const emails = await readInbox(tokens, 500);
       if (emails.length === 0) {
         return 'Your inbox is empty.';
       }
