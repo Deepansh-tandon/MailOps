@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/api";
 
-export default function AuthPage() {
+function AuthContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -35,11 +35,12 @@ export default function AuthPage() {
 
         const data = await response.json();
         
-        // localStorage
+        // Store tokens in localStorage
         localStorage.setItem("gmail_tokens", JSON.stringify(data.tokens));
         
         setStatus("success");
-
+        
+        // Redirect to chat page after 1 second
         setTimeout(() => {
           router.push("/chat");
         }, 1000);
@@ -78,3 +79,14 @@ export default function AuthPage() {
   );
 }
 
+export default function AuthPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen w-full bg-neutral-950 flex items-center justify-center">
+        <p className="text-white text-xl">Loading...</p>
+      </div>
+    }>
+      <AuthContent />
+    </Suspense>
+  );
+}
