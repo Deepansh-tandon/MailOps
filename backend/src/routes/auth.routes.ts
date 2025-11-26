@@ -12,9 +12,9 @@ router.get('/google', (req: Request, res: Response) => {
   }
 });
 
-router.get('/google/callback', async (req: Request, res: Response) => {
+router.post('/exchange-token', async (req: Request, res: Response) => {
   try {
-    const { code } = req.query;
+    const { code } = req.body;
     
     if (!code || typeof code !== 'string') {
       return res.status(400).json({ error: 'Authorization code is required' });
