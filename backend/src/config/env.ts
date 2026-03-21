@@ -10,5 +10,6 @@ export const env = {
   GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/auth',
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',
   NODE_ENV: process.env.NODE_ENV || 'development',
+  OPENROUTER: process.env.OPENROUTER || '',
 };
 

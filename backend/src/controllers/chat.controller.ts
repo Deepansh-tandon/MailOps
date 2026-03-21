@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { detectGmailIntent } from '../services/intent.service.js';
 import { handleGmailAction } from './gmail.controller.js';
-import { streamOpenAIResponse } from '../services/openai.service.js';
+import { streamOpenRouterResponse } from '../services/openai.service.js';
 import { setupSSE, sendSSEChunk, sendSSEDone, sendSSEError } from '../utils/sse.js';
 
 export const streamChat = async (req: Request, res: Response) => {
@@ -28,7 +28,7 @@ export const streamChat = async (req: Request, res: Response) => {
 
     const messages = [{ role: 'user' as const, content: message }];
     
-    for await (const chunk of streamOpenAIResponse(messages, gmailContext)) {
+    for await (const chunk of streamOpenRouterResponse(messages, gmailContext)) {
       sendSSEChunk(res, chunk);
     }
     

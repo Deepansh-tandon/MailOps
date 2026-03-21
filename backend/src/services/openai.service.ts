@@ -68,3 +68,75 @@ export const streamOpenAIResponse = async function* (
   }
 };
 
+export const streamOpenRouterResponse = async function* (
+  messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
+  gmailContext?: string
+): AsyncGenerator<string, void, unknown> {
+  const systemPrompt = getSystemPrompt();
+  
+  const systemInstruction = gmailContext
+    ? `${systemPrompt}\n\nGmail Context: ${gmailContext}\n\nRemember: Always format your response with Heading, Description, and Probable Follow-up Question sections.`
+    : systemPrompt;
+
+  const allMessages = [
+    { role: 'system', content: systemInstruction },
+    ...messages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }))
+  ];
+
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${env.OPENROUTER}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: "qwen/qwen3-coder:free",
+      messages: allMessages,
+      stream: true
+    })
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`OpenRouter API error: ${response.status} - ${errorBody}`);
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new Error("No response body returned from OpenRouter");
+  }
+
+  const decoder = new TextDecoder("utf-8");
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    
+    // Keep the last incomplete line in the buffer
+    buffer = lines.pop() || "";
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed === "data: [DONE]") continue;
+
+      if (trimmed.startsWith("data: ")) {
+        try {
+          const data = JSON.parse(trimmed.slice(6));
+          const content = data.choices?.[0]?.delta?.content;
+          if (content) {
+            yield content;
+          }
+        } catch (e) {
+          // Ignore JSON parse error and continue
+        }
+      }
+    }
+  }
+};
