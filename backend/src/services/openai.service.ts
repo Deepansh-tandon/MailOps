@@ -86,22 +86,54 @@ export const streamOpenRouterResponse = async function* (
     }))
   ];
 
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${env.OPENROUTER}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      model: "qwen/qwen3-coder:free",
-      messages: allMessages,
-      stream: true
-    })
+  const models = [
+    "qwen/qwen3-coder:free",
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "minimax/minimax-m2.5:free",
+    "z-ai/glm-4.5-air:free",
+    "openai/gpt-oss-120b:free"
+  ];
+
+  // @ts-ignore
+  const controllers = models.map(() => new AbortController());
+
+  const fetchPromises = models.map(async (model, index) => {
+    // @ts-ignore
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${env.OPENROUTER}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: allMessages,
+        stream: true
+      }),
+      signal: controllers[index].signal
+    });
+
+    if (!res.ok) {
+      const errorBody = await res.text();
+      throw new Error(`API error for ${model}: ${res.status} - ${errorBody}`);
+    }
+    
+    return { res, winnerIndex: index };
   });
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`OpenRouter API error: ${response.status} - ${errorBody}`);
+  let response;
+  try {
+    const result = await Promise.any(fetchPromises);
+    response = result.res;
+
+    // Abort all slower or pending requests to save bandwidth and rate limits
+    controllers.forEach((controller, index) => {
+      if (index !== result.winnerIndex) {
+        controller.abort();
+      }
+    });
+  } catch (error: any) {
+    throw new Error(`All OpenRouter free models failed: ${error.message}`);
   }
 
   const reader = response.body?.getReader();
@@ -109,6 +141,7 @@ export const streamOpenRouterResponse = async function* (
     throw new Error("No response body returned from OpenRouter");
   }
 
+  // @ts-ignore
   const decoder = new TextDecoder("utf-8");
   let buffer = "";
 
