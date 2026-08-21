@@ -3,6 +3,7 @@ import cors from 'cors';
 import { env } from './config/env.js';
 import chatRoutes from './routes/chat.routes.js';
 import authRoutes from './routes/auth.routes.js';
+import integrationsRoutes from './routes/integrations.routes.js';
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 
 app.use('/api/chat', chatRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/integrations', integrationsRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });

@@ -9,17 +9,20 @@ export const setupSSE = (res: Response) => {
   res.flushHeaders();
 };
 
-export const sendSSEChunk = (res: Response, chunk: string) => {
-  res.write(`data: ${JSON.stringify({ type: 'token', data: chunk })}\n\n`);
+export const sendSSE = (res: Response, payload: Record<string, unknown>) => {
+  res.write(`data: ${JSON.stringify(payload)}\n\n`);
 };
 
-export const sendSSEDone = (res: Response) => {
-  res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+export const sendSSEChunk = (res: Response, chunk: string) => {
+  sendSSE(res, { type: 'token', data: chunk });
+};
+
+export const sendSSEDone = (res: Response, threadId?: string) => {
+  sendSSE(res, { type: 'done', threadId });
   res.end();
 };
 
 export const sendSSEError = (res: Response, error: string) => {
-  res.write(`data: ${JSON.stringify({ type: 'error', error })}\n\n`);
+  sendSSE(res, { type: 'error', error });
   res.end();
 };
-

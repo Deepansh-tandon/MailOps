@@ -11,5 +11,8 @@ export const env = {
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',
   NODE_ENV: process.env.NODE_ENV || 'development',
   OPENROUTER: process.env.OPENROUTER || '',
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
+  COMPOSIO_API_KEY: process.env.COMPOSIO_API_KEY || '',
+  LLM_MODEL: process.env.LLM_MODEL || 'openai/gpt-4o-mini',
 };
 

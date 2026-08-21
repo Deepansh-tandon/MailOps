@@ -10,34 +10,17 @@ import {
   NavbarLogo,
   NavbarButton,
 } from "@/components/ui/resizable-navbar";
-import { useState, useEffect } from "react";
-import { API_BASE_URL } from "@/lib/api";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export function NavbarWrapper() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const tokens = localStorage.getItem("gmail_tokens");
-    setIsAuthenticated(!!tokens);
-  }, []);
-
-  const handleGmailAuth = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/google`);
-      const data = await response.json();
-      if (data.authUrl) {
-        window.location.href = data.authUrl;
-      }
-    } catch (error) {
-      console.error("Failed to get auth URL:", error);
-    }
-  };
+  const router = useRouter();
 
   const navItems = [
     { name: "Home", link: "/" },
-    { name: "Features", link: "/features" },
-    { name: "About", link: "/about" },
+    { name: "Integrations", link: "/integrations" },
+    { name: "Chat", link: "/chat" },
   ];
 
   return (
@@ -45,15 +28,13 @@ export function NavbarWrapper() {
       <NavBody>
         <NavbarLogo />
         <NavItems items={navItems} />
-        {isAuthenticated ? (
-          <NavbarButton as="button" onClick={() => {}} variant="primary">
-            Connected
-          </NavbarButton>
-        ) : (
-          <NavbarButton as="button" onClick={handleGmailAuth} variant="primary">
-            Connect Gmail
-          </NavbarButton>
-        )}
+        <NavbarButton
+          as="button"
+          onClick={() => router.push("/integrations")}
+          variant="primary"
+        >
+          Connect apps
+        </NavbarButton>
       </NavBody>
       <MobileNav>
         <MobileNavHeader>
@@ -77,18 +58,19 @@ export function NavbarWrapper() {
               {item.name}
             </a>
           ))}
-          {isAuthenticated ? (
-            <NavbarButton as="button" onClick={() => {}} variant="primary" className="w-full mt-4">
-              Connected
-            </NavbarButton>
-          ) : (
-            <NavbarButton as="button" onClick={handleGmailAuth} variant="primary" className="w-full mt-4">
-              Connect Gmail
-            </NavbarButton>
-          )}
+          <NavbarButton
+            as="button"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              router.push("/integrations");
+            }}
+            variant="primary"
+            className="w-full mt-4"
+          >
+            Connect apps
+          </NavbarButton>
         </MobileNavMenu>
       </MobileNav>
     </Navbar>
   );
 }
-
